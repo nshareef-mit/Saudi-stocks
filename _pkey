@@ -1,0 +1,15 @@
+                                             Table "public.announcements"
+       Column        |            Type             | Collation | Nullable |                  Default                  
+---------------------+-----------------------------+-----------+----------+-------------------------------------------
+ id                  | integer                     |           | not null | nextval('announcements_id_seq'::regclass)
+ symbol              | character varying(10)       |           |          | 
+ announcement_date   | timestamp without time zone |           |          | 
+ title_ar            | text                        |           |          | 
+ price_on_date       | numeric(10,2)               |           |          | 
+ change_pct_on_date  | numeric(6,2)                |           |          | 
+ announcement_number | bigint                      |           |          | 
+Indexes:
+    "announcements_pkey" PRIMARY KEY, btree (id)
+    "announcements_announcement_number_key" UNIQUE CONSTRAINT, btree (announcement_number)
+    "idx_announcements_symbol" btree (symbol)
+

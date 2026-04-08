@@ -1,0 +1,14 @@
+              List of relations
+ Schema |      Name       | Type  |   Owner   
+--------+-----------------+-------+-----------
+ public | announcements   | table | stockuser
+ public | companies       | table | stockuser
+ public | daily_prices    | table | stockuser
+ public | dividends       | table | stockuser
+ public | financials      | table | stockuser
+ public | news            | table | stockuser
+ public | news_embeddings | table | postgres
+ public | prices          | table | stockuser
+ public | social_posts    | table | postgres
+(9 rows)
+
