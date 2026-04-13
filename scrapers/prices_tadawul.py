@@ -175,12 +175,6 @@ class PriceLoader:
         session = requests.Session()
         session.headers.update(HEADERS)
 
-        # ✅ TRUNCATE TABLE FIRST
-        with conn.cursor() as cur:
-            log.warning("Truncating prices table...")
-            cur.execute("TRUNCATE TABLE prices;")
-        conn.commit()
-
         with conn.cursor() as cur:
             cur.execute("SELECT symbol, sector_code, market FROM companies ORDER BY symbol")
             companies = cur.fetchall()
@@ -302,6 +296,63 @@ class PriceLoader:
 
         conn.close()
 
+    @classmethod
+    def auto_refresh(cls):
+        db_config = {
+            "dbname": os.getenv("DB_NAME", "saudi_stocks"),
+            "user": os.getenv("DB_USER", "stockuser"),
+            "password": os.getenv("DB_PASSWORD", ""),
+            "host": os.getenv("DB_HOST", "localhost"),
+            "port": int(os.getenv("DB_PORT", "5432")),
+        }
+
+        conn = psycopg2.connect(**db_config)
+        with conn.cursor() as cur:
+            cur.execute("SELECT MAX(date) FROM prices;")
+            last_date = cur.fetchone()[0]
+        conn.close()
+
+        if last_date is None:
+            log.error("prices table is empty — run a full historical load first.")
+            return
+
+        today = datetime.today().date()
+        start = last_date + timedelta(days=1)
+
+        if start > today:
+            log.info(f"Prices already up to date (last date: {last_date}).")
+            return
+
+        # ── Saudi weekend = Friday (4) + Saturday (5) ──────────
+        # Only fetch if there are actual trading days in the gap
+        # weekday(): Mon=0, Tue=1, Wed=2, Thu=3, Fri=4, Sat=5, Sun=6
+        trading_days_missed = [
+            start + timedelta(days=i)
+            for i in range((today - start).days + 1)
+            if (start + timedelta(days=i)).weekday() not in (4, 5)
+        ]
+
+        if not trading_days_missed:
+            log.info(
+                f"Prices up to date — gap is Fri/Sat only "
+                f"(last date: {last_date}, today: {today})."
+            )
+            return
+
+        # end = today so we always include the current trading day
+        end = today
+
+        log.info(
+            f"Auto-refreshing prices: "
+            f"{start.strftime('%d-%m-%Y')} → {end.strftime('%d-%m-%Y')} "
+            f"({len(trading_days_missed)} trading day(s) missed)"
+        )
+
+        loader = cls(
+            start_date=start.strftime("%d-%m-%Y"),
+            end_date=end.strftime("%d-%m-%Y"),
+        )
+        loader.run()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

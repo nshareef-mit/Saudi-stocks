@@ -1,4 +1,6 @@
 .env
 __pycache__/
 *.pyc
-.env.*
+.env.*analysis/2222/*.csv
+analysis/2222/*.csv
+analysis/2222/*.csv

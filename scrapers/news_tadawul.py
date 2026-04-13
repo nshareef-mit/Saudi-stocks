@@ -253,4 +253,4 @@ if __name__ == "__main__":
 
     # scraper.fetch_all()
     # scraper.save("tadawul_news.json")
-    load_json_to_db("scrapers/tadawul_news.json")
+    #load_json_to_db("scrapers/tadawul_news.json")
